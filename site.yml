@@ -1,0 +1,42 @@
+---
+- hosts: all
+  become: true
+  tasks:
+
+  - name: Install updates (Ubuntu)
+    apt:
+      upgrade: dist
+      update_cache: yes
+    changed_when: false
+    when: ansible_distribution == "Ubuntu"
+
+  - name: Install docker in Ubuntu
+    apt:
+      name: docker.io
+      state: present
+      update_cache: yes
+    when: ansible_distribution == "Ubuntu"
+
+  - name: Start Docker in Ubuntu
+    service:
+      name: docker
+      state: restarted
+
+  - name: Add docker group to current user
+    ansible.builtin.group:
+      name: argente-docker
+      state: present
+
+  - name: Copy Docker file
+    copy:
+      src: dockerfile
+      dest: /argente/docker/
+
+  - name: Docker install and build
+    docker_image:
+      name: Container for ansible
+      build:
+         path: /argente/docker/
+      source: build
+
+
